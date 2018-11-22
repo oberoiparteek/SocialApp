@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#efefef</color>
+    <color name="colorPrimaryDark">#4D4E49</color>
+    <color name="colorAccent">#000</color>
+    <color name="colorButtonFore">#E67E22</color>
+    <color name="colorButtonRed">#E74C3C</color>
+    <color name="colorButtonOrange">#E67E22</color>
+    <color name="colorBlue">#395BC0</color>
+    <color name="black_alpha_40">#66000000</color>
+    <color name="speech_bubble_agent">#E74C3C</color>
+    <color name="colorGreen">#10824b</color>
+
+
+</resources>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        tools:context=".SignupDetailsActivity">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif-monospace"
+            android:paddingTop="40dp"
+            android:text="Step 2: Enter Details"
+            android:textAlignment="center"
+            android:textColor="#000"
+            android:textSize="30sp"
+            android:textStyle="bold"
+
+            />
+
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:src="@drawable/ic_user_stub"
+            android:id="@+id/img_signup"
+
+            />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <android.support.design.button.MaterialButton
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_weight="0.5"
+                android:paddingBottom="20sp"
+                android:paddingTop="20sp"
+                android:onClick="bt_event_choose_from_gallery"
+
+                android:text="From Gallery"
+                android:textColor="#ffffff"
+                android:textSize="20sp"
+                app:backgroundTint="@color/colorButtonFore" />
+
+            <android.support.design.button.MaterialButton
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_weight="0.5"
+                android:paddingBottom="20sp"
+                android:paddingTop="20sp"
+                android:onClick="bt_event_choose_from_camera"
+                android:text="From Camera"
+                android:textColor="#ffffff"
+                android:textSize="20sp"
+                app:backgroundTint="@color/colorButtonRed" />
+
+        </LinearLayout>
+
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/et_signup_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:hint="enter your name here"
+                android:inputType="text|textPersonName"
+                android:paddingBottom="20sp" />
+
+        </android.support.design.widget.TextInputLayout>
+
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/et_signup_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:hint="enter your email here"
+                android:inputType="textEmailAddress"
+                android:paddingBottom="20sp" />
+        </android.support.design.widget.TextInputLayout>
+
+
+        <android.support.design.button.MaterialButton
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:onClick="bt_event_next"
+            android:paddingBottom="20sp"
+            android:paddingTop="20sp"
+            android:text="Next"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            app:backgroundTint="@color/colorButtonFore" />
+
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+
+    >
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.3"
+        android:background="@drawable/gradient"
+        >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Group Name"
+            android:id="@+id/tv_dialog_group_name"
+            android:layout_gravity="center"
+            android:paddingLeft="5sp"
+            android:paddingTop="20dp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-condensed"
+            android:textSize="30sp"
+            android:textColor="#fff"
+            />
+
+        <TextView
+            android:paddingTop="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#fff"
+            android:paddingLeft="5sp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-condensed"
+            android:text="Created By:"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tv_dialog_owner_name"
+            android:textColor="#fff"
+            android:paddingLeft="5sp"
+            android:fontFamily="sans-serif-condensed"
+            android:text="My Name"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tv_dialog_owner_phone"
+            android:fontFamily="sans-serif-condensed"
+            android:textColor="#fff"
+            android:paddingLeft="5sp"
+            android:text="9999999"/>
+    </LinearLayout>
+    </ScrollView>
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:id="@+id/recycler_dialog_members"
+        android:layout_weight="0.7">
+
+    </android.support.v7.widget.RecyclerView>
+
+</LinearLayout>

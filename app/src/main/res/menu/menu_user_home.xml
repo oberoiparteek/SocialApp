@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app = "http://schemas.android.com/apk/res-auto"
+    xmlns:tools = "http://schemas.android.com/tools"
+    tools:context = "com.admin.friendsandfamilylocator.Home">
+
+    <item
+        android:id = "@+id/menu_item_change_photo"
+        android:orderInCategory="101"
+        android:title="Change Photo" />
+
+    <item android:id="@+id/menu_stop_service"
+        android:orderInCategory="101"
+        android:title="Stop Service"/>
+    <item
+        android:id = "@+id/menu_item_logout"
+        android:orderInCategory="101"
+        android:title="Logout" />
+
+
+
+</menu>

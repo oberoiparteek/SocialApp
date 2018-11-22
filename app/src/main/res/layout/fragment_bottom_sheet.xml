@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <!-- NOTE: This list should be displayed in a list
+    instead of nested layouts -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/activity_margin"
+        android:paddingTop="8dp"
+        android:paddingRight="@dimen/activity_margin"
+        android:paddingBottom="8dp">
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:tint="#000"
+            android:layout_marginRight="32dp"
+            android:src="@drawable/ic_user_stub" />
+
+        <TextView
+            android:id="@+id/username_bottom_sheet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="USER NAME"
+            android:fontFamily="sans-serif-condensed"
+            android:textColor="#000"
+            android:textSize="25sp"
+            android:textFontWeight="400"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:id="@+id/live_tracking_bottom_sheet"
+        android:foreground="?attr/selectableItemBackground"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/activity_margin"
+        android:paddingTop="8dp"
+        android:paddingRight="@dimen/activity_margin"
+        android:paddingBottom="8dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginRight="32dp"
+            android:src="@android:drawable/ic_menu_directions"
+            android:tint="@color/colorGreen" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="Live Tracking"
+            android:textColor="#000"
+            android:fontFamily="sans-serif-condensed"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:id="@+id/history_bottom_sheet"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/activity_margin"
+        android:paddingTop="8dp"
+        android:paddingRight="@dimen/activity_margin"
+        android:paddingBottom="8dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginRight="32dp"
+            android:src="@android:drawable/ic_menu_recent_history"
+            android:tint="#000" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="History"
+            android:fontFamily="sans-serif-condensed"
+            android:textColor="#000"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/activity_margin"
+        android:paddingTop="8dp"
+        android:paddingRight="@dimen/activity_margin"
+        android:paddingBottom="8dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginRight="32dp"
+            android:src="@android:drawable/ic_menu_info_details"
+            android:tint="@color/colorBlue" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="User info"
+            android:textColor="#000"
+            android:fontFamily="sans-serif-condensed"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+
+</LinearLayout>
