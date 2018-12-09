@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ViewDangerLocation">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar_view_danger"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:title="Danger Location"
+        app:titleTextColor="#000" />
+
+    <ImageView
+        android:id="@+id/no_data_view_danger"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/wire"
+        android:visibility="gone" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_view_danger_location"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+    </android.support.v7.widget.RecyclerView>
+
+</LinearLayout>

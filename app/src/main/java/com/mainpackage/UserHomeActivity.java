@@ -1,22 +1,27 @@
 package com.mainpackage;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.NavigationView;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -25,6 +30,7 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,10 +38,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,15 +64,27 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.ib.custom.toast.CustomToast;
+import com.toptoche.searchablespinnerlibrary.SearchableSpinner;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.Set;
 
 public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -72,17 +94,73 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
     private RecyclerAdapterGroupMembers adapter_selected_group;
     ArrayList<Group> groupsArrayList = new ArrayList<>();
     ArrayList<User> selected_group_membersArrayList = new ArrayList<>();
-    Spinner spinner_choose_group;
+    SearchableSpinner spinner_choose_group;
     ArrayAdapter<Group> spinner_adapter;
     final String TAG = "MYMSG";
-
-
-    private HashMap<Marker, User> markersHashMap=new HashMap<>();
+    ImageView im_photo;
+    Switch switch_location;
+    private HashMap<Marker, User> markersHashMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_home);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 103);
+        }
+        switch_location = findViewById(R.id.switch_location);
+        if (FetchContinousLocationService.isServiceStarted) {
+            switch_location.setChecked(true);
+        }
+        Intent i = new Intent(this, CheckDangerLocationService.class);
+        i.setAction("START SERVICE");
+        startForegroundService(i);
+        switch_location.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    Intent service_intent = new Intent(UserHomeActivity.this, FetchContinousLocationService.class);
+                    service_intent.setAction("START SIGNAL");
+                    if (ActivityCompat.checkSelfPermission(UserHomeActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(UserHomeActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        switch_location.setChecked(false);
+                        ActivityCompat.requestPermissions(UserHomeActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 103);
+                    } else {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            startForegroundService(service_intent);
+                        } else {
+                            startService(service_intent);
+                        }
+                    }
+
+                } else {
+                    stopService();
+                }
+            }
+        });
+        mapNumbers();
+        final SharedPreferences myprefs = getSharedPreferences("myprefs", Context.MODE_PRIVATE);
+        String token_generated = myprefs.getString("token_generated", "");
+        if (token_generated.isEmpty()) {
+            FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                @Override
+                public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                    Log.d("MYMSG Token On Home", task.getResult().getToken());
+                    FirebaseDatabase.getInstance().getReference("tokens").child(GlobalApp.phone_number).setValue(task.getResult().getToken()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            CustomToast.makeSuccessToast(UserHomeActivity.this, "Token Saved", View.VISIBLE).show();
+                            SharedPreferences.Editor edit = myprefs.edit();
+                            edit.putString("token_generated", "true");
+                            edit.commit();
+                        }
+                    });
+                }
+            });
+        } else {
+            CustomToast.makeInfoToast(UserHomeActivity.this, "Token Already Saved", View.VISIBLE).show();
+        }
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_user_home);
         setSupportActionBar(toolbar);
 
@@ -91,20 +169,27 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout_user_home);
         adapter_selected_group = new RecyclerAdapterGroupMembers();
         recycler_view_group_members = findViewById(R.id.recycler_view_group_members);
-
-
+        recycler_view_group_members.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         recycler_view_group_members.setAdapter(adapter_selected_group);
-
-        GridLayoutManager layoutManager = new GridLayoutManager(this, 1);
-        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
-        recycler_view_group_members.setLayoutManager(layoutManager);
 
 
         spinner_choose_group = findViewById(R.id.spinner_choose_group);
+        spinner_choose_group.setTitle("Select A Group");
         spinner_adapter =
                 new ArrayAdapter<Group>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, groupsArrayList);
         spinner_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner_choose_group.setAdapter(spinner_adapter);
+        spinner_choose_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                fetchGroupLocation();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
 
         // Adding menu icon to Toolbar
@@ -119,8 +204,6 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                // set item as selected to persist highlight
-                // close drawer when item is tapped
                 mDrawerLayout.closeDrawers();
 
                 Intent i;
@@ -139,16 +222,46 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
                         startActivity(i);
                         return true;
                     case R.id.menu_item_plan_a_meeting:
-                        i=new Intent(UserHomeActivity.this,PlanAMeetingActivity.class);
+                        i = new Intent(UserHomeActivity.this, PlanAMeetingActivity.class);
                         startActivity(i);
-                        return  true;
+                        return true;
+                    case R.id.nav_manage:
+                        i = new Intent(UserHomeActivity.this, ViewMeetings.class);
+                        startActivity(i);
+                        return true;
+                    case R.id.mark_danger:
+                        i = new Intent(UserHomeActivity.this, MarkDangerLocation.class);
+                        startActivity(i);
+                        return true;
+                    case R.id.view_danger_location:
+                        i = new Intent(UserHomeActivity.this, ViewDangerLocation.class);
+                        startActivity(i);
+                        return true;
+                    case R.id.logout:
+                        logout();
+                        return true;
                 }
-                return true;
+                return false;
             }
         });
         View headerView = navigationView.getHeaderView(0);
         TextView tv_username = headerView.findViewById(R.id.nav_header_username);
-        ImageView im_photo = headerView.findViewById(R.id.nav_header_userphoto);
+        im_photo = headerView.findViewById(R.id.nav_header_userphoto);
+        ImageView edit_photo = headerView.findViewById(R.id.edit_photo);
+        edit_photo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (ActivityCompat.checkSelfPermission(UserHomeActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(UserHomeActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 110);
+                } else {
+                    Intent intent = new Intent();
+                    intent.setType("image/*");
+                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                    startActivityForResult(Intent.createChooser(intent, "Select Picture"), 106);
+                }
+            }
+        });
         SharedPreferences sharedPreferences = getSharedPreferences("myprefs", MODE_PRIVATE);
         String session_username = sharedPreferences.getString("session_username", "");
         String session_img_url = sharedPreferences.getString("session_img_url", "");
@@ -163,12 +276,29 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
         getGroups();
     }
 
+    private void mapNumbers() {
+
+        FirebaseDatabase.getInstance().getReference("users").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot d : dataSnapshot.getChildren()) {
+                    GlobalApp.name_no_mapping.put(d.getKey(), d.child("username").getValue(String.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     void getGroups() {
         FirebaseDatabase
                 .getInstance()
                 .getReference("users")
                 .child(GlobalApp.phone_number)
-                .child("groupcodes")
+                .child("groups")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull final DataSnapshot dataSnapshot) {
@@ -186,11 +316,9 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
                                             @Override
                                             public void onDataChange(@NonNull DataSnapshot dataSnapshotMembers) {
                                                 if (dataSnapshotMembers.exists()) {
-
                                                     Group group = dataSnapshotMembers.getValue(Group.class);
                                                     groupsArrayList.add(group);
                                                     spinner_adapter.notifyDataSetChanged();
-
                                                 } else {
                                                     Toast.makeText(UserHomeActivity.this, "Data Doesn't Exist", Toast.LENGTH_SHORT).show();
                                                 }
@@ -201,10 +329,7 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
                                                 Toast.makeText(UserHomeActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                                             }
                                         });
-
                             }
-
-
                         }
                     }
 
@@ -222,54 +347,25 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
             case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
-            case R.id.menu_item_change_photo:
-                Toast.makeText(this, "Change Photo", Toast.LENGTH_SHORT).show();
-                return true;
-            case R.id.menu_item_logout:
-                ProgressDialog progressDialog = new ProgressDialog(this);
-                progressDialog.setCancelable(false);
-                progressDialog.setTitle("Logging Out !!");
-                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                progressDialog.show();
-                GlobalApp.clearAll();
-                SharedPreferences sp = getSharedPreferences("myprefs", MODE_PRIVATE);
-                SharedPreferences.Editor sp_editor = sp.edit();
-                sp_editor.clear();
-                sp_editor.commit();
-                progressDialog.dismiss();
-                Intent i = new Intent(this, MainActivity.class);
-                startActivity(i);
-                return true;
-            case R.id.menu_stop_service:
-                Intent service_intent = new Intent(this, FetchContinousLocationService.class);
-                service_intent.setAction("STOP SIGNAL");
-                startService(service_intent);
 
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_user_home, menu);
-        return true;
-    }
-
-    void bt_event_fetch_group_details(View v) {
-
+    void fetchGroupLocation() {
         if (spinner_choose_group.getSelectedItem() != null) {
 
             Group selected_group = (Group) spinner_choose_group.getSelectedItem();
             mMap.clear();
             selected_group_membersArrayList.clear();
             markersHashMap.clear();
-            for (String member_phone : selected_group.getMembers()) {
+            Set<String> keySet = selected_group.getMembers().keySet();
+            for (String member_phone : keySet) {
                 FirebaseDatabase
                         .getInstance()
                         .getReference("users")
-                        .child(member_phone).addListenerForSingleValueEvent(new ValueEventListener() {
+                        .child(selected_group.getMembers().get(member_phone)).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
@@ -317,15 +413,6 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -334,15 +421,14 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                    BottomSheetFragment bottomSheetFragment = new BottomSheetFragment();
-                    bottomSheetFragment.setCurr_user(markersHashMap.get(marker));
-                    bottomSheetFragment.show(getSupportFragmentManager(), bottomSheetFragment.getTag());
+                BottomSheetFragment bottomSheetFragment = new BottomSheetFragment();
+                bottomSheetFragment.setCurr_user(markersHashMap.get(marker));
+                bottomSheetFragment.show(getSupportFragmentManager(), bottomSheetFragment.getTag());
                 return false;
             }
         });
 
     }
-
 
     class RecyclerAdapterGroupMembers extends RecyclerView.Adapter<RecyclerAdapterGroupMembers.MyViewHolder> {
 
@@ -403,7 +489,7 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
 
             tv_group_member_name = (TextView) (localcardview.findViewById(R.id.tv_group_member_name));
             im_group_member_photo = (ImageView) (localcardview.findViewById(R.id.im_group_member_photo));
-            tv_group_member_name.setText(curr_user.getUsername());
+            tv_group_member_name.setText(curr_user.getUsername().toUpperCase());
             Glide.with(UserHomeActivity.this).load(curr_user.photo).apply(RequestOptions.circleCropTransform()).into(im_group_member_photo);
         }
 
@@ -412,7 +498,6 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
             return selected_group_membersArrayList.size();
         }
     }
-
 
     private Bitmap getMarkerBitmapFromView(Drawable res, String name) {
 
@@ -435,7 +520,92 @@ public class UserHomeActivity extends AppCompatActivity implements OnMapReadyCal
         return returnedBitmap;
     }
 
+    private void logout() {
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.setTitle("Logging Out !!");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.show();
+        GlobalApp.clearAll();
+        SharedPreferences sp = getSharedPreferences("myprefs", MODE_PRIVATE);
+        SharedPreferences.Editor sp_editor = sp.edit();
+        sp_editor.clear();
+        sp_editor.commit();
+        progressDialog.dismiss();
+        stopService();
+        Intent i = new Intent(this, MainActivity.class);
+        startActivity(i);
+    }
 
+    private void stopService() {
+        if (FetchContinousLocationService.isServiceStarted) {
+            Intent service_intent = new Intent(this, FetchContinousLocationService.class);
+            service_intent.setAction("STOP SIGNAL");
+            startService(service_intent);
+        }
+        if (CheckDangerLocationService.isStarted) {
+            Intent service_intent = new Intent(this, CheckDangerLocationService.class);
+            service_intent.setAction("STOP SIGNAL");
+            startService(service_intent);
+        }
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == 106) {
+            if (resultCode == RESULT_OK) {
+                if (data.getData() != null) {
+                    CustomToast.makeDefaultToast(UserHomeActivity.this, "Uploading Photo").show();
+                    Uri uri = data.getData();
+                    final StorageReference reference = FirebaseStorage.getInstance().getReference("images");
+                    UploadTask uploadTask = reference.putFile(uri);
+                    uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                        @Override
+                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                            if (!task.isSuccessful()) {
+                                throw Objects.requireNonNull(task.getException());
+                            }
+
+                            return reference.getDownloadUrl();
+                        }
+                    }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Uri> task) {
+                            if (task.isSuccessful()) {
+                                CustomToast.makeSuccessToast(UserHomeActivity.this, "Successfully Uploaded Photo", View.VISIBLE).show();
+                                Uri downloadUri = task.getResult();
+                                FirebaseDatabase.getInstance().getReference("users").child(GlobalApp.phone_number).child("photo").setValue(downloadUri.toString());
+                                SharedPreferences sharedPreferences = getSharedPreferences("myprefs", MODE_PRIVATE);
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString("session_img_url", downloadUri.toString());
+                                editor.apply();
+                                Glide.with(UserHomeActivity.this).load(downloadUri).apply(RequestOptions.circleCropTransform()).into(im_photo);
+                            } else {
+                                CustomToast.makeErrorToast(UserHomeActivity.this, "Failed To Upload Photo", View.VISIBLE).show();
+
+                            }
+                        }
+                    });
+
+                }
+            } else {
+                CustomToast.makeInfoToast(this, "No Photo Selected", View.VISIBLE).show();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == 110) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent, "Select Picture"), 106);
+            } else {
+                CustomToast.makeInfoToast(this, "Permission Denied! Can't Select Photo", View.VISIBLE).show();
+            }
+        }
+    }
 }
 

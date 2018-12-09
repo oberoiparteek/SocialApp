@@ -1,58 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar_plan_a_meeting"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        >
-        <Spinner
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/spinner_group_meeting"
-            />
+        android:layout_height="?attr/actionBarSize"
+        android:background="#ffffff"
+        android:elevation="4dp"
+        app:title="Plan a Meeting" />
 
-
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
-            xmlns:tools="http://schemas.android.com/tools"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#57e1fffd"
-            android:orientation="vertical"
-            tools:context="com.mainpackage.PlanAMeetingActivity">
-
+            android:orientation="vertical">
 
             <fragment
                 android:id="@+id/fragment_place_autocomplete"
                 android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
                 android:layout_width="match_parent"
-
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp" />
 
             <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:map="http://schemas.android.com/apk/res-auto"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:id="@+id/map"
                 android:name="com.google.android.gms.maps.SupportMapFragment"
                 android:layout_width="match_parent"
-                android:layout_height="480dp"
+                android:layout_height="200dp"
                 tools:context="com.mainpackage.PlanAMeetingActivity" />
 
-            <Button
+
+            <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:onClick="schedule"
-                android:text="Schedule Meeting"
-                android:textColor="#FFF"
-                android:textSize="20sp" />
+                android:layout_margin="13dp"
+                app:cardCornerRadius="2dp"
+                app:cardElevation="5dp">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="Select Group"
+                        android:textColor="@color/colorButtonRed"
+                        android:textStyle="bold" />
+
+                    <com.toptoche.searchablespinnerlibrary.SearchableSpinner
+                        android:id="@+id/spinner_group_meeting"
+                        style="@style/Widget.AppCompat.Spinner.Underlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:padding="5dp" />
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="5dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="left"
+                            android:letterSpacing="0.1"
+                            android:text="Enter Title  "
+                            android:textColor="@color/colorButtonRed"
+                            android:textStyle="bold" />
+
+                        <EditText
+                            android:id="@+id/et_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0.6"
+                            android:textSize="22dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="5dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="left"
+                            android:text="Select Date "
+                            android:textColor="@color/colorButtonRed"
+                            android:textStyle="bold" />
+
+
+                        <EditText
+                            android:id="@+id/et_date"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:drawableRight="@drawable/calendar"
+                            android:editable="false"
+                            android:onClick="dateSelect"
+                            android:textSize="22dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="5dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="left"
+                            android:text="Select Time  "
+                            android:textColor="@color/colorButtonRed"
+                            android:textStyle="bold" />
+
+                        <EditText
+                            android:id="@+id/et_time"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:drawableRight="@drawable/time"
+                            android:editable="false"
+                            android:onClick="timeSelect"
+                            android:textSize="22dp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_schedule_place"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_above="@id/bt_schedule"
+                        android:layout_marginTop="5dp"
+                        android:padding="5dp"
+                        android:shadowColor="#a9a9a9"
+                        android:text="No Location Selected"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+
+                    <Button
+                        android:id="@+id/bt_schedule"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentBottom="true"
+                        android:layout_margin="10dp"
+                        android:fontFamily="sans-serif"
+                        android:onClick="schedule"
+                        android:text="Schedule Meeting"
+                        android:textColor="#FFF"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </android.support.v7.widget.CardView>
         </LinearLayout>
-    </LinearLayout>
+    </ScrollView>
+</LinearLayout>
 
-</ScrollView>
+

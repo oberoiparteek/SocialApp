@@ -4,52 +4,62 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:weightSum="2"
     android:background="#ffffff"
     android:orientation="vertical"
-
+    android:weightSum="2"
     tools:context=".MainActivity">
 
-  <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:layout_weight="1">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:letterSpacing="0.1"
+        android:padding="15dp"
+        android:text="Social App"
+        android:textColor="@color/colorButtonRed"
+        android:textSize="32sp"
+        android:textStyle="bold" />
 
-  </LinearLayout>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:src="@drawable/gole">
+
+    </ImageView>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        android:layout_weight="1">
         <android.support.design.button.MaterialButton
             android:layout_width="match_parent"
-            app:backgroundTint="@color/colorButtonFore"
             android:layout_height="wrap_content"
-            android:paddingTop="20sp"
-            android:paddingBottom="20sp"
-            android:textColor="#ffffff"
-            android:text="Login"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
             android:onClick="bt_event_login"
-            android:textSize="20sp"
-            app:icon="@drawable/ic_login"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="30dp"
-            />
-        <android.support.design.button.MaterialButton
-            android:layout_width="match_parent"
-            app:backgroundTint="@color/colorButtonRed"
-            android:layout_height="wrap_content"
             android:paddingTop="20sp"
             android:paddingBottom="20sp"
+            android:text="Login"
             android:textColor="#ffffff"
-            android:onClick="bt_event_signup"
-            android:text="SignUp"
             android:textSize="20sp"
-            app:icon="@drawable/ic_signup"
+            app:backgroundTint="@color/black"
+            app:icon="@drawable/ic_login" />
+
+        <android.support.design.button.MaterialButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="30dp"
-            />
+            android:onClick="bt_event_signup"
+            android:paddingTop="20sp"
+            android:paddingBottom="20sp"
+            android:text="SignUp"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            app:backgroundTint="@color/colorButtonRed"
+            app:icon="@drawable/ic_signup" />
 
     </LinearLayout>
 </LinearLayout>

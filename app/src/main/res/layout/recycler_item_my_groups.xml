@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardview_item_my_groups"
-    android:layout_marginBottom="10dp"
-    android:layout_marginRight="5dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:layout_marginLeft="5dp"
-    android:background="#ffffff"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    android:layout_marginRight="5dp"
+    android:layout_marginBottom="10dp"
+    android:background="#ffffff">
+
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
         android:layout_marginLeft="5dp"
-        android:background="#ffffff"
-        android:layout_marginRight="5dp"
         android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="10dp"
+        android:background="#ffffff"
         android:orientation="horizontal"
         android:weightSum="8">
 
@@ -29,55 +30,54 @@
 
             <TextView
                 android:id="@+id/tv_item_group_name"
-                android:paddingLeft="10sp"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Group Name"
+                android:background="@color/colorButtonRed"
                 android:fontFamily="sans-serif-condensed"
-                android:textStyle="bold"
-                android:textColor="#000000"
-                android:textSize="22sp" />
+                android:text="Group Name"
+                android:textColor="#fff"
+                android:padding="10dp"
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
             <TextView
-                android:paddingTop="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Owner"
-                android:paddingLeft="10sp"
                 android:fontFamily="sans-serif-condensed"
+                android:paddingLeft="10sp"
+                android:paddingTop="10dp"
+                android:text="Owner - "
                 android:textColor="#808080"
                 android:textSize="12sp" />
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
-                <ImageView
-                    android:layout_width="50dp"
-                    android:src="@drawable/ic_user_stub"
-                    android:paddingLeft="10sp"
-                    android:id="@+id/im_item_group_owner_photo"
-                    android:layout_height="50dp"
-                    android:layout_weight="0.3"/>
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.7"
                     android:orientation="vertical">
+
                     <TextView
                         android:id="@+id/tv_item_group_owner_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Owner Name"
                         android:fontFamily="sans-serif-condensed"
                         android:paddingLeft="10sp"
+                        android:text="Owner Name"
                         android:textColor="#808080"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
                     <TextView
                         android:id="@+id/tv_item_owner_phone_number"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="9653894173"
                         android:paddingLeft="10sp"
+                        android:text="9653894173"
                         android:textColor="#808080"
                         android:textSize="16sp" />
                 </LinearLayout>
@@ -85,19 +85,20 @@
 
 
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:layout_gravity="center|right"
-            android:orientation="vertical"
-            android:layout_height="wrap_content">
+            android:layout_weight="1"
+            android:orientation="vertical">
+
             <ImageButton
+                android:id="@+id/bt_item_view_group_info"
                 android:layout_width="wrap_content"
-                android:src="@android:drawable/ic_menu_info_details"
                 android:layout_height="wrap_content"
                 android:background="#fff"
-
-                android:id="@+id/bt_item_view_group_info"/>
+                android:src="@drawable/info" />
 
         </LinearLayout>
     </LinearLayout>

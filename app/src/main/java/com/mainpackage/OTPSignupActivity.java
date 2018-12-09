@@ -26,6 +26,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.ib.custom.toast.CustomToast;
 
 import java.util.concurrent.TimeUnit;
 
@@ -34,7 +39,7 @@ public class OTPSignupActivity extends AppCompatActivity {
 
     private EditText et_otp;
     private FirebaseAuth mAuth;
-    private String  VerificationId;
+    private String VerificationId;
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
     private boolean mVerificationInProgress = false;
     private String mVerificationId;
@@ -50,38 +55,28 @@ public class OTPSignupActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup_otp);
-//        FirebaseApp.initializeApp(this);
-     mAuth = FirebaseAuth.getInstance();
-        et_otp=findViewById(R.id.et_otp);
-        et_phone_number=findViewById(R.id.et_phone_number);
-        tv_status=findViewById(R.id.tv_status);
-        signup_with_Otp=findViewById(R.id.signup_with_Otp);
-        send_otp=findViewById(R.id.bt_send_otp);
-        progressBar_signup_otp=findViewById(R.id.progressBar_signup_otp);
+
+        mAuth = FirebaseAuth.getInstance();
+        et_otp = findViewById(R.id.et_otp);
+        et_phone_number = findViewById(R.id.et_phone_number);
+        tv_status = findViewById(R.id.tv_status);
+        signup_with_Otp = findViewById(R.id.signup_with_Otp);
+        send_otp = findViewById(R.id.bt_send_otp);
+        progressBar_signup_otp = findViewById(R.id.progressBar_signup_otp);
         mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
 
-            // onVerificationCompleted is Auto Called if Auto Detection of SMS is done
 
             @Override
             public void onVerificationCompleted(PhoneAuthCredential credential) {
-                // This callback will be invoked in two situations:
-                // 1 - Instant verification. In some cases the phone number can be instantly
-                //     verified without neebbgxding to send or enter a verification code.
-                // 2 - Auto-retrieval. On some devices Google Play services can automatically
-                //     detect the incoming verification SMS and perform verificaiton without
-                //     user action.
-
                 et_otp.setText(credential.getSmsCode());
-                //et2.setVisibility(View.INVISIBLE);
                 et_phone_number.setVisibility(View.INVISIBLE);
                 signup_with_Otp.setVisibility(View.INVISIBLE);
-                Log.d("MYMSG", "verification completed");
+
+                progressBar_signup_otp.setVisibility(View.GONE);
 
                 tv_status.setText("Auto Detection Complete");
                 tv_status.setTextColor(Color.GREEN);
                 send_otp.setEnabled(false);
-                //Toast.makeText(MainActivity.this, "Code verified", Toast.LENGTH_SHORT).show();
-
                 gotoNextActivity();
 
             }
@@ -90,12 +85,15 @@ public class OTPSignupActivity extends AppCompatActivity {
             public void onVerificationFailed(FirebaseException e) {
                 // This callback is invoked in an invalid request for verification is made,
                 // for instance if the the phone number format is not valid.
-                Log.d("MYMSG", "onVerificationFailed"+e.getMessage());
-                Toast.makeText(OTPSignupActivity.this,"Verification Failed, Try Again ",Toast.LENGTH_LONG).show();
-                Intent i=new Intent(OTPSignupActivity.this,MainActivity.class);
-                startActivity(i);
-                OTPSignupActivity.this.finish();
+                CustomToast.makeText(OTPSignupActivity.this, "Verification Failed, Try Again ", Toast.LENGTH_LONG).show();
+                progressBar_signup_otp.setVisibility(View.GONE);
+            }
 
+            @Override
+            public void onCodeAutoRetrievalTimeOut(String s) {
+
+                progressBar_signup_otp.setVisibility(View.GONE);
+                tv_status.setText("Enter Otp Manually");
             }
 
             @Override
@@ -105,61 +103,74 @@ public class OTPSignupActivity extends AppCompatActivity {
                 VerificationId = verificationId;
                 et_otp.setVisibility(View.VISIBLE);
                 tv_status.setVisibility(View.VISIBLE);
+                tv_status.setTextColor(Color.BLACK);
+                tv_status.setText("Detecting OTP");
                 signup_with_Otp.setVisibility(View.VISIBLE);
             }
         };
 
     }
 
-    public  void  gotoNextActivity()
-    {
-        Intent i=new Intent(this,SignupDetailsActivity.class);
-        i.putExtra("phone",phoneNumber);
+    public void gotoNextActivity() {
+        Intent i = new Intent(this, SignupDetailsActivity.class);
+        i.putExtra("phone", phoneNumber);
         startActivity(i);
         this.finish();
     }
 
-    public void send_otp(View view)
-    {
+    public void send_otp(View view) {
 
 
         if (et_phone_number.getText().toString().equals("") || et_phone_number.getText().length() < 10) {
-            Toast.makeText(this, "Please Enter a Valid Phone Number", Toast.LENGTH_LONG).show();
-        } else
-        {
-
-            hideKeyboard(this);
-            send_otp.setEnabled(false);
-            progressBar_signup_otp.setVisibility(View.VISIBLE);
-
-            Log.d("MYMSG", "Phone No Veification Started");
-
+            Toast.makeText(this, "All Fields Are Compulsory", Toast.LENGTH_LONG).show();
+        } else {
             phoneNumber = et_phone_number.getText().toString();
-            if(!phoneNumber.contains("+")){
-                phoneNumber="+91"+phoneNumber;
+            if (!phoneNumber.contains("+")) {
+                phoneNumber = "+91" + phoneNumber;
             }
-            Log.d("aaya",phoneNumber);
+            tv_status.setVisibility(View.VISIBLE);
+            tv_status.setText("Please Wait!");
+            FirebaseDatabase.getInstance().getReference("users").child(phoneNumber).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        tv_status.setText("Account Already Exist ! Try Sign In");
+                        tv_status.setTextColor(getResources().getColor(R.color.colorButtonRed));
+                        return;
+                    } else {
 
-            Log.d("MYMSG", "Phone No Veification Started"+phoneNumber+"khali");
-            PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                    phoneNumber,        // Phone number to verify
-                    120,                 // Timeout duration
-                    TimeUnit.SECONDS,   // Unit of timeout
-                    this,               // Activity (for callback binding)
-                    mCallbacks);        // OnVerificationStateChangedCallbacks
+                        hideKeyboard(OTPSignupActivity.this);
+                        send_otp.setEnabled(false);
+                        progressBar_signup_otp.setVisibility(View.VISIBLE);
 
-            et_otp.setVisibility(View.VISIBLE);
-            signup_with_Otp.setVisibility(View.VISIBLE);
-            et_otp.setVisibility(View.VISIBLE);
+                        PhoneAuthProvider.getInstance().verifyPhoneNumber(
+                                phoneNumber,        // Phone number to verify
+                                120,                 // Timeout duration
+                                TimeUnit.SECONDS,   // Unit of timeout
+                                OTPSignupActivity.this,               // Activity (for callback binding)
+                                mCallbacks);        // OnVerificationStateChangedCallbacks
+
+                        et_otp.setVisibility(View.VISIBLE);
+                        signup_with_Otp.setVisibility(View.VISIBLE);
+                        et_otp.setVisibility(View.VISIBLE);
+
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
         }
     }
 
     public void signup(View view) {
         String code = et_otp.getText().toString();
 
-        if(code.equalsIgnoreCase("")){
-         Toast.makeText(this, "Invalid Code",Toast.LENGTH_LONG).show();
-        }else {
+        if (code.equalsIgnoreCase("")) {
+            Toast.makeText(this, "Invalid Code", Toast.LENGTH_LONG).show();
+        } else {
             PhoneAuthCredential credential = PhoneAuthProvider.getCredential(VerificationId, code);
             signInWithPhoneAuthCredential(credential);
         }
@@ -171,27 +182,17 @@ public class OTPSignupActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            //Toast.makeText(MainActivity.this, "Phone Verified", Toast.LENGTH_SHORT).show();
-
                             et_otp.setText(credential.getSmsCode());
-                            //et2.setVisibility(View.INVISIBLE);
                             et_phone_number.setVisibility(View.INVISIBLE);
-
                             tv_status.setText("Manual Verification Complete");
                             tv_status.setTextColor(Color.BLUE);
-
-
-
                             gotoNextActivity();
-
                         } else {
                             if (task.getException() instanceof
                                     FirebaseAuthInvalidCredentialsException) {
                                 // The verification code entered was invalid
-                                Toast.makeText(OTPSignupActivity.this, "Invalid code", Toast.LENGTH_SHORT).show();
-                                Intent i=new Intent(OTPSignupActivity.this,MainActivity.class);
-                                startActivity(i);
-                                OTPSignupActivity.this.finish();
+                                CustomToast.makeText(OTPSignupActivity.this, "Invalid code", Toast.LENGTH_SHORT).show();
+
 
                             }
                         }
@@ -200,7 +201,6 @@ public class OTPSignupActivity extends AppCompatActivity {
 
 
     }
-
 
 
     public static void hideKeyboard(Activity activity) {

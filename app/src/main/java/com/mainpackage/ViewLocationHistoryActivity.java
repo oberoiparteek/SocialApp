@@ -14,15 +14,19 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.ib.custom.toast.CustomToast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -32,7 +36,7 @@ public class ViewLocationHistoryActivity extends FragmentActivity implements OnM
 
     private GoogleMap mMap;
     String phone_number_to_track;
-     Calendar myCalendar;
+    Calendar myCalendar;
     EditText et_view_history_date_picker;
     DatePickerDialog.OnDateSetListener date;
 
@@ -56,6 +60,7 @@ public class ViewLocationHistoryActivity extends FragmentActivity implements OnM
                 myCalendar.set(Calendar.YEAR, year);
                 myCalendar.set(Calendar.MONTH, monthOfYear);
                 myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                et_view_history_date_picker.setText(dayOfMonth + "/" + monthOfYear + "/" + year);
                 updateMap();
             }
 
@@ -71,25 +76,25 @@ public class ViewLocationHistoryActivity extends FragmentActivity implements OnM
         });
         myCalendar = Calendar.getInstance();
     }
-    void updateMap(){
-        String myFormat = "yy-dd-mm";
-        SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.US);
-        String date_to_filter = sdf.format(myCalendar.getTime());
-        et_view_history_date_picker.setText(date_to_filter);
-        Log.d("MYMSG", "updateMap: "+phone_number_to_track);
+
+    void updateMap() {
+
+        String filter = GlobalApp.simpleDateFormat.format(myCalendar.getTime());
+
+        Log.d("MYMSG", "updateMap: " + phone_number_to_track);
         FirebaseDatabase
                 .getInstance()
                 .getReference("users")
                 .child(phone_number_to_track)
                 .child("locations")
                 .orderByChild("date")
-                .equalTo(date_to_filter).addListenerForSingleValueEvent(new ValueEventListener() {
+                .equalTo(filter).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshotLocations) {
 
                 LatLng[] latLngs = new LatLng[(int) (dataSnapshotLocations.getChildrenCount())];
                 int count = 0;
-                Log.d("MYMSG", "onDataChange: "+dataSnapshotLocations);
+                Log.d("MYMSG", "onDataChange: " + dataSnapshotLocations);
 
                 if (dataSnapshotLocations.exists()) {
                     for (DataSnapshot snapshot : dataSnapshotLocations.getChildren()) {
@@ -101,25 +106,34 @@ public class ViewLocationHistoryActivity extends FragmentActivity implements OnM
                     Polyline polyline1 = mMap.addPolyline(new PolylineOptions()
                             .clickable(true)
                             .add(latLngs)
+                            .jointType(JointType.ROUND)
+                            .startCap(new RoundCap())
+                            .width(12)
+                            .color(0xff000000)
+                            .geodesic(true)
                     );
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngs[0], 13));
 
+                    mMap.addMarker(new MarkerOptions().position(latLngs[0]).title("Start").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));
+                    mMap.addMarker(new MarkerOptions().position(latLngs[latLngs.length - 1]).title("End").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
                     CameraPosition cameraPosition = new CameraPosition.Builder()
-                            .target(latLngs[0])      // Sets the center of the map to location user
+                            .target(latLngs[latLngs.length - 1])      // Sets the center of the map to location user
                             .zoom(17)                   // Sets the zoom
                             .bearing(90)                // Sets the orientation of the camera to east
                             .tilt(40)                   // Sets the tilt of the camera to 30 degrees
                             .build();                   // Creates a CameraPosition from the builder
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
+                } else {
+                    CustomToast.makeInfoToast(ViewLocationHistoryActivity.this, "No Location History Found", View.VISIBLE).show();
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Toast.makeText(ViewLocationHistoryActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-
 
 
     }

@@ -12,15 +12,16 @@ public class User {
     String phone;
     String photo;
     String username;
-    private ArrayList<LocationDAO> locations;
+    private HashMap<String, LocationDAO> locations;
+    private HashMap<String, String> meeting;
 
-    ArrayList<String> invitations;
-    ArrayList<String> groupcodes;
-    ArrayList<String> groupnames;
-    User() {
+    HashMap<String, String> invitations;
+    HashMap<String, String> groups;
+
+    public User() {
     }
 
-    public User(String email, double last_longitude, double last_latitude, String phone, String photo, String username, ArrayList<LocationDAO> locations, ArrayList<String> invitaions, ArrayList<String> groupcodes, ArrayList<String> groupnames) {
+    public User(String email, double last_longitude, double last_latitude, String phone, String photo, String username, HashMap<String, LocationDAO> locations, HashMap<String, String> meeting, HashMap<String, String> invitations, HashMap<String, String> groups) {
         this.email = email;
         this.last_longitude = last_longitude;
         this.last_latitude = last_latitude;
@@ -28,9 +29,9 @@ public class User {
         this.photo = photo;
         this.username = username;
         this.locations = locations;
-        this.invitations = invitaions;
-        this.groupcodes = groupcodes;
-        this.groupnames = groupnames;
+        this.meeting = meeting;
+        this.invitations = invitations;
+        this.groups = groups;
     }
 
     public String getEmail() {
@@ -81,35 +82,35 @@ public class User {
         this.username = username;
     }
 
-    public ArrayList<LocationDAO> getLocations() {
+    public HashMap<String, LocationDAO> getLocations() {
         return locations;
     }
 
-    public void setLocations(ArrayList<LocationDAO> locations) {
+    public void setLocations(HashMap<String, LocationDAO> locations) {
         this.locations = locations;
     }
 
-    public ArrayList<String> getInvitations() {
+    public HashMap<String, String> getMeeting() {
+        return meeting;
+    }
+
+    public void setMeeting(HashMap<String, String> meeting) {
+        this.meeting = meeting;
+    }
+
+    public HashMap<String, String> getInvitations() {
         return invitations;
     }
 
-    public void setInvitations(ArrayList<String> invitations) {
+    public void setInvitations(HashMap<String, String> invitations) {
         this.invitations = invitations;
     }
 
-    public ArrayList<String> getGroupcodes() {
-        return groupcodes;
+    public HashMap<String, String> getGroups() {
+        return groups;
     }
 
-    public void setGroupcodes(ArrayList<String> groupcodes) {
-        this.groupcodes = groupcodes;
-    }
-
-    public ArrayList<String> getGroupnames() {
-        return groupnames;
-    }
-
-    public void setGroupnames(ArrayList<String> groupnames) {
-        this.groupnames = groupnames;
+    public void setGroups(HashMap<String, String> groups) {
+        this.groups = groups;
     }
 }

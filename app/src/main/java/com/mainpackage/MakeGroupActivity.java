@@ -1,13 +1,16 @@
 package com.mainpackage;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.LinearGradient;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
@@ -36,11 +39,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.ib.custom.toast.CustomToast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MakeGroupActivity extends AppCompatActivity {
 
+    private static final int LOCATION_REQUEST = 103;
     private String TAG = "MYMSG";
     private ArrayList<ContactItem> contactItemArrayList = new ArrayList<>();
     private ArrayList<ContactItem> contactItemFirebaseArrayList = new ArrayList<>();
@@ -79,7 +85,6 @@ public class MakeGroupActivity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Please wait !!");
         progressDialog.setCancelable(false);
-        fetch_firebase_contacts();
 
         // Starting actions
 
@@ -97,7 +102,11 @@ public class MakeGroupActivity extends AppCompatActivity {
         layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         recycler_view_contacts_selected.setLayoutManager(layoutManager);
 
-
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestContactPermission();
+        } else {
+            fetch_firebase_contacts();
+        }
     }
 
     @Override
@@ -122,31 +131,21 @@ public class MakeGroupActivity extends AppCompatActivity {
                 null, null, null);
         StringBuffer tvdata = new StringBuffer();
 
-        int i = 0;
+
         while (cursor.moveToNext()) {
             String dname = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
             int hascontact = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
             int id = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-            if (hascontact == 1) {
+            if (hascontact > 0) {
                 Uri contentUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
                 Cursor cnew = getContentResolver().query(contentUri, null,
                         ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=" + id,
                         null, null);
-                String phonenumbers = "";
-                if (cnew.moveToNext()) {
+                while (cnew.moveToNext()) {
                     String phonenumber = cnew.getString(cnew.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                    phonenumbers = phonenumbers + phonenumber;
+                    contactItemArrayList.add(new ContactItem(dname, phonenumber));
                 }
-
-                if (tvdata.toString().contains("--->" + phonenumbers + "\n\n")) {
-                    continue;
-                }
-                tvdata.append(dname + "---> " + phonenumbers + "\n\n");
-                contactItemArrayList.add(new ContactItem(dname, phonenumbers));
-                i++;
                 cnew.close();
-            } else {
             }
         }
         cursor.close();
@@ -171,7 +170,7 @@ public class MakeGroupActivity extends AppCompatActivity {
                     contactItemFirebaseArrayList.add(contactItem);
                 }
                 if (contactItemFirebaseArrayList.size() == dataSnapshot.getChildrenCount()) {
-                    Log.d("Make Group","firebase over");
+                    Log.d("Make Group", "firebase over");
                     fetch_contacts();
                     progressDialog.dismiss();
                     GlobalApp.hideKeyboard(MakeGroupActivity.this);
@@ -189,8 +188,6 @@ public class MakeGroupActivity extends AppCompatActivity {
     }
 
     void retainAllUseful() {
-
-
         contactItemFirebaseArrayList.retainAll(contactItemArrayList);
         for (ContactItem contactItem : contactItemFirebaseArrayList) {
             Log.d(TAG, "retainAllUseful: " + contactItem.photo);
@@ -208,93 +205,58 @@ public class MakeGroupActivity extends AppCompatActivity {
         } else {
             DatabaseReference groups_reference = FirebaseDatabase.getInstance().getReference("groups");
             final String push_key_groups = groups_reference.push().getKey();
-            Group group =new Group();
+            Group group = new Group();
             group.setGroupCode(push_key_groups);
             group.setGroupName(group_name);
             group.setOwner(GlobalApp.phone_number);
+            String key = groups_reference.push().getKey();
 
-            ArrayList<String> al_members = new ArrayList<>();
-            al_members.add(GlobalApp.phone_number);
-
-            group.setMembers(al_members);
+            HashMap<String, String> members = new HashMap<>();
+            members.put(key, GlobalApp.phone_number);
+            group.setMembers(members);
 
             groups_reference.child(push_key_groups).setValue(group).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
-                    sendInvites(push_key_groups,group_name);
+                    sendInvites(push_key_groups, group_name);
                 }
             });
 
         }
     }
 
-
-    void sendInvites(final String group_code, final String group_name){
+    void sendInvites(final String group_code, final String group_name) {
         final FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-        for(ContactItem c: contactSelectedArrayList){
-            final DatabaseReference reference = firebaseDatabase.getReference("users/"+c.phone_number+"/invitations");
+        for (ContactItem c : contactSelectedArrayList) {
+            final DatabaseReference reference = firebaseDatabase.getReference("users/" + c.phone_number + "/invitations");
             reference.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    ArrayList<String> invites=(ArrayList<String>) dataSnapshot.getValue();
-                    if(invites==null){
-                        invites=new ArrayList<>();
-                    }
-                    invites.add(group_code);
-                    reference.setValue(invites);
+                    reference.push().setValue(group_code);
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError databaseError) {
-                    Toast.makeText(MakeGroupActivity.this,"Could not send Invites , Unknown Error ",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MakeGroupActivity.this, "Could not send Invites , Unknown Error ", Toast.LENGTH_SHORT).show();
                 }
             });
 
 
         }
-            final DatabaseReference reference_group_codes = firebaseDatabase.getReference("users/" + GlobalApp.phone_number + "/groupcodes");
-            reference_group_codes.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    ArrayList<String> all_codes = (ArrayList<String>) dataSnapshot.getValue();
-                    if (all_codes == null) {
-                        all_codes = new ArrayList<>();
-                    }
-                    all_codes.add(group_code);
-                    reference_group_codes.setValue(all_codes);
+        final DatabaseReference reference_group_codes = firebaseDatabase.getReference("users/" + GlobalApp.phone_number + "/groups");
+        reference_group_codes.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                reference_group_codes.push().setValue(group_code);
+                progressDialog.dismiss();
+                MakeGroupActivity.this.finish();
+            }
 
-                    ///-------------------------------------------------------------------------
-                    final DatabaseReference reference_group_names = firebaseDatabase.getReference("users/" + GlobalApp.phone_number + "/groupnames");
-                    reference_group_names.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            ArrayList<String> all_names = (ArrayList<String>) dataSnapshot.getValue();
-                            if (all_names == null) {
-                                all_names = new ArrayList<>();
-                            }
-
-                            all_names.add(group_name);
-                            reference_group_names.setValue(all_names);
-                            Toast.makeText(MakeGroupActivity.this, "Invites has been sent", Toast.LENGTH_SHORT).show();
-                            progressDialog.dismiss();
-                            MakeGroupActivity.this.finish();
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                            Toast.makeText(MakeGroupActivity.this, "Unknown Error", Toast.LENGTH_LONG).show();
-                        }
-                    });
-                    ///-------------------------------------------------------------------------------
-
-
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    Toast.makeText(MakeGroupActivity.this, "Unknown Error", Toast.LENGTH_LONG).show();
-                }
-            });
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(MakeGroupActivity.this, "Unknown Error", Toast.LENGTH_LONG).show();
+            }
+        });
 
 
     }
@@ -391,6 +353,7 @@ public class MakeGroupActivity extends AppCompatActivity {
         if (contactSelectedArrayList.size() >= 2) {
             fab_make_group.show();
         } else {
+            tv_selected_contacts_count.setText("Select At Least Two People");
             fab_make_group.hide();
         }
         selectedRecyclerAdapter.notifyDataSetChanged();
@@ -456,4 +419,18 @@ public class MakeGroupActivity extends AppCompatActivity {
     }
 
 
+    private void requestContactPermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, LOCATION_REQUEST);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == LOCATION_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                fetch_firebase_contacts();
+            } else {
+                CustomToast.makeInfoToast(MakeGroupActivity.this, "Can't Read Contacts Without Permission", View.GONE).show();
+            }
+        }
+    }
 }

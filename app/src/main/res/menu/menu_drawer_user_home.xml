@@ -3,37 +3,37 @@
     <group android:checkableBehavior="none">
         <item
             android:id="@+id/menu_item_make_group"
-            android:icon="@android:drawable/ic_menu_my_calendar"
+            android:icon="@drawable/people"
             android:title="Make Group" />
         <item
             android:id="@+id/menu_item_view_invites"
-            android:icon="@android:drawable/ic_menu_manage"
+            android:icon="@drawable/group_invites"
             android:title="View Group Invites" />
         <item
             android:id="@+id/menu_item_my_groups"
-            android:icon="@android:drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_groups"
             android:title="My Groups" />
         <item
             android:id="@+id/menu_item_plan_a_meeting"
-            android:icon="@android:drawable/ic_menu_slideshow"
+            android:icon="@drawable/meeting"
             android:title="Plan A meeting" />
         <item
             android:id="@+id/nav_manage"
-            android:icon="@android:drawable/ic_menu_manage"
+            android:icon="@drawable/view_meetings"
             android:title="View Meetings" />
 
         <item
             android:id="@+id/mark_danger"
-            android:icon="@android:drawable/ic_menu_manage"
+            android:icon="@drawable/ic_danger"
             android:title="Mark danger Location" />
         <item
             android:id="@+id/view_danger_location"
-            android:icon="@android:drawable/ic_menu_manage"
+            android:icon="@drawable/view_danger_location"
             android:title="View danger Location" />
         <item
-            android:id="@+id/panic_alert"
-            android:icon="@android:drawable/ic_menu_manage"
-            android:title="Panic Alerts" />
+            android:id="@+id/logout"
+            android:icon="@drawable/logout"
+            android:title="Logout" />
 
     </group>
 </menu>

@@ -35,18 +35,19 @@
                 android:id="@+id/et_new_group_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.5"
+                android:layout_margin="5dp"
                 android:hint="Enter Group Name"
                 android:paddingLeft="10dp"
-                android:paddingRight="10dp"/>
+                android:paddingRight="10dp" />
 
             <TextView
                 android:id="@+id/tv_selected_contacts_count"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="5dp"
                 android:paddingLeft="10dp"
-                android:text="Select one or More People" />
+                android:paddingTop="5dp"
+                android:text="Select At Least Two People"
+                android:textColor="#000" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recycler_view_contacts_selected"
@@ -61,9 +62,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:paddingLeft="10dp"
+            android:padding="10dp"
             android:text="Your Contacts"
             android:textColor="#AF4057"
+            android:textSize="20dp"
             android:textStyle="bold" />
 
         <FrameLayout

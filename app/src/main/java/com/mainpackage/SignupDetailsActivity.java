@@ -32,6 +32,7 @@ import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
+import com.ib.custom.toast.CustomToast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -153,7 +154,7 @@ public class SignupDetailsActivity extends AppCompatActivity {
     }
 
     private void uploadSignupData(Uri uri) {
-        Log.d("MYMSG","in upload");
+        Log.d("MYMSG", "in upload");
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference usersRef = database.getReference("users/" + phone_number);
         User user = new User();
@@ -167,7 +168,7 @@ public class SignupDetailsActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                    Toast.makeText(SignupDetailsActivity.this, "Signup Successful", Toast.LENGTH_LONG).show();
+                    CustomToast.makeText(SignupDetailsActivity.this, "Signup Successful! Please Login Again", Toast.LENGTH_LONG).show();
                     progressDialog.dismiss();
                     Intent i = new Intent(SignupDetailsActivity.this, OTPLoginActivity.class);
                     startActivity(i);

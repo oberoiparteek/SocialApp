@@ -1,17 +1,19 @@
 package com.mainpackage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Group {
     private String groupCode;
     private String groupName;
     private String owner;
-    private ArrayList<String> members;
-    public Group(){
+    private HashMap<String, String> members;
+
+    public Group() {
 
     }
 
-    public Group(String groupCode, String groupName, String owner, ArrayList<String> members) {
+    public Group(String groupCode, String groupName, String owner, HashMap<String, String> members) {
         this.groupCode = groupCode;
         this.groupName = groupName;
         this.owner = owner;
@@ -42,11 +44,11 @@ public class Group {
         this.owner = owner;
     }
 
-    public ArrayList<String> getMembers() {
+    public HashMap<String, String> getMembers() {
         return members;
     }
 
-    public void setMembers(ArrayList<String> members) {
+    public void setMembers(HashMap<String, String> members) {
         this.members = members;
     }
 

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ChatActivity">
+
+    <TextView
+        android:id="@+id/tv_chat_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorButtonRed"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Group Name"
+        android:textColor="#fff"
+        android:textSize="28sp" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_chat"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/ll"
+        android:layout_below="@+id/tv_chat_name">
+
+
+    </android.support.v7.widget.RecyclerView>
+
+    <LinearLayout
+        android:id="@+id/ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <EditText
+            android:id="@+id/et_message"
+            style="@style/RtlUnderlay.Widget.AppCompat.ActionButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.7" />
+
+        <Button
+            android:id="@+id/bt_send_msg"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.3"
+            android:onClick="send"
+            android:text="SEND" />
+    </LinearLayout>
+
+</RelativeLayout>

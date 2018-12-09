@@ -8,8 +8,10 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -27,6 +29,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 
 public class MyGroupsActivity extends AppCompatActivity {
 
@@ -35,16 +39,21 @@ public class MyGroupsActivity extends AppCompatActivity {
     RecyclerView recycler_view_my_groups;
     ArrayList<Group> myGroupsArrayList = new ArrayList<>();
     MyGroupsRecyclerAdapter myGroupsRecyclerAdapter;
+    ImageView no_data_my_group;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_groups);
+        no_data_my_group = findViewById(R.id.no_data_my_group);
         recycler_view_my_groups = findViewById(R.id.recycler_view_my_groups);
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Loading Groups.. !!");
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-
+        Toolbar toolbar = findViewById(R.id.toolbar_my_groups);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         myGroupsRecyclerAdapter = new MyGroupsRecyclerAdapter();
         recycler_view_my_groups.setAdapter(myGroupsRecyclerAdapter);
@@ -60,16 +69,20 @@ public class MyGroupsActivity extends AppCompatActivity {
         FirebaseDatabase
                 .getInstance()
                 .getReference("users")
-                .child(GlobalApp.phone_number).child("groupcodes")
+                .child(GlobalApp.phone_number).child("groups")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            String group_code = snapshot.getValue(String.class);
-                            getGroupInfo(group_code);
+                        if (dataSnapshot.exists()) {
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                String group_code = snapshot.getValue(String.class);
+                                getGroupInfo(group_code);
+                            }
+                            no_data_my_group.setVisibility(View.GONE);
+                        } else {
+                            no_data_my_group.setVisibility(View.VISIBLE);
                         }
                         progressDialog.dismiss();
-
                     }
 
                     @Override
@@ -81,7 +94,7 @@ public class MyGroupsActivity extends AppCompatActivity {
 
     }
 
-    void getGroupInfo(String group_code){
+    void getGroupInfo(String group_code) {
         FirebaseDatabase
                 .getInstance()
                 .getReference("groups")
@@ -132,26 +145,27 @@ public class MyGroupsActivity extends AppCompatActivity {
             CardView localcardview = holder.singlecardview;
             final Group groupItem = myGroupsArrayList.get(position);
             TextView tv_item_group_name;
-            ImageView im_item_group_owner_photo;
             final TextView tv_item_group_owner_name;
             final TextView tv_item_owner_phone_number;
             ImageButton bt_item_view_group_info;
 
             tv_item_group_name = localcardview.findViewById(R.id.tv_item_group_name);
-            im_item_group_owner_photo = localcardview.findViewById(R.id.im_item_group_owner_photo);
             tv_item_group_owner_name = localcardview.findViewById(R.id.tv_item_group_owner_name);
             tv_item_owner_phone_number = localcardview.findViewById(R.id.tv_item_owner_phone_number);
             bt_item_view_group_info = localcardview.findViewById(R.id.bt_item_view_group_info);
+
+            tv_item_owner_phone_number.setText(groupItem.getOwner());
+            tv_item_group_owner_name.setText(GlobalApp.name_no_mapping.get(groupItem.getOwner()).toUpperCase());
+            tv_item_group_name.setText(groupItem.getGroupName());
+
 
             bt_item_view_group_info.setOnClickListener(new View.OnClickListener() {
                 DialogRecyclerAdapter dialogRecyclerAdapter;
                 TextView tv_dialog_owner_phone;
                 TextView tv_dialog_owner_name;
-
-
-                ArrayList<User> membersArrayList=new ArrayList<>();
-                 Dialog dialog=null;
-                 User ownerObj=null;
+                ArrayList<User> membersArrayList = new ArrayList<>();
+                Dialog dialog = null;
+                User ownerObj = null;
 
 
                 @Override
@@ -164,12 +178,12 @@ public class MyGroupsActivity extends AppCompatActivity {
                     RecyclerView recycler_dialog_members = dialog.findViewById(R.id.recycler_dialog_members);
                     tv_dialog_owner_name = dialog.findViewById(R.id.tv_dialog_owner_name);
                     tv_dialog_owner_phone = dialog.findViewById(R.id.tv_dialog_owner_phone);
-                    TextView tv_dialog_group_name=dialog.findViewById(R.id.tv_dialog_group_name);
+                    TextView tv_dialog_group_name = dialog.findViewById(R.id.tv_dialog_group_name);
 
 
-                    tv_dialog_group_name.setText(""+groupItem.getGroupName());
+                    tv_dialog_group_name.setText("" + groupItem.getGroupName());
 
-                    dialogRecyclerAdapter=new DialogRecyclerAdapter(membersArrayList);
+                    dialogRecyclerAdapter = new DialogRecyclerAdapter(membersArrayList);
                     recycler_dialog_members.setAdapter(dialogRecyclerAdapter);
 
                     LinearLayoutManager simpleverticallayout = new LinearLayoutManager(getApplicationContext());
@@ -179,13 +193,13 @@ public class MyGroupsActivity extends AppCompatActivity {
                     loadMembers();
                 }
 
-                void loadMembers(){
+                void loadMembers() {
                     membersArrayList.clear();
 
                     FirebaseDatabase.getInstance().getReference("users").child(groupItem.getOwner()).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            ownerObj=dataSnapshot.getValue(User.class);
+                            ownerObj = dataSnapshot.getValue(User.class);
                             tv_dialog_owner_name.setText(ownerObj.getUsername());
                             tv_dialog_owner_phone.setText(ownerObj.getPhone());
                         }
@@ -195,10 +209,11 @@ public class MyGroupsActivity extends AppCompatActivity {
 
                         }
                     });
-                    ArrayList<String> members = groupItem.getMembers();
+                    HashMap<String, String> members = groupItem.getMembers();
 
-                    for (String s : members) {
-                        FirebaseDatabase.getInstance().getReference("users").child(s).addListenerForSingleValueEvent(new ValueEventListener() {
+                    Set<String> keySet = members.keySet();
+                    for (String s : keySet) {
+                        FirebaseDatabase.getInstance().getReference("users").child(members.get(s)).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 User value = dataSnapshot.getValue(User.class);
@@ -208,17 +223,13 @@ public class MyGroupsActivity extends AppCompatActivity {
 
                             @Override
                             public void onCancelled(@NonNull DatabaseError databaseError) {
-                                Toast.makeText(getApplicationContext(),"Couldn't Load Members",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Couldn't Load Members", Toast.LENGTH_SHORT).show();
                             }
 
                         });
                     }
                 }
             });
-
-            tv_item_group_name.setText(groupItem.getGroupName());
-
-            tv_item_owner_phone_number.setText(groupItem.getOwner());
 
 
         }
@@ -230,12 +241,13 @@ public class MyGroupsActivity extends AppCompatActivity {
     }
 
 
-
     class DialogRecyclerAdapter extends RecyclerView.Adapter<MyGroupsActivity.DialogRecyclerAdapter.MyViewHolder> {
         private ArrayList<User> membersArrayList;
-        DialogRecyclerAdapter(ArrayList<User> members){
-            this.membersArrayList=members;
+
+        DialogRecyclerAdapter(ArrayList<User> members) {
+            this.membersArrayList = members;
         }
+
         // Define ur own View Holder (Refers to Single Row)
         class MyViewHolder extends RecyclerView.ViewHolder {
             CardView singlecardview;
@@ -284,5 +296,11 @@ public class MyGroupsActivity extends AppCompatActivity {
         }
     }
 
-
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+        }
+        return true;
+    }
 }

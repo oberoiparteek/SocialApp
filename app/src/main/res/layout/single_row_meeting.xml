@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:orientation="vertical"
+    app:cardCornerRadius="3dp"
+    app:cardElevation="3dp">
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_meeting_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="Title"
+            android:textColor="#000"
+            android:textSize="25sp" />
+
+        <TextView
+            android:id="@+id/tv_meeting_time"
+            android:layout_width="match_parent"
+
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_meeting_title"
+            android:drawableLeft="@drawable/calendar"
+            android:padding="5dp"
+            android:text="Date"
+            android:textSize="17sp"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/tv_meeting_created"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_meeting_time"
+            android:drawableLeft="@drawable/person"
+            android:padding="5dp"
+            android:text="By"
+            android:textSize="17sp"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/tv_meeting_at"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_meeting_created"
+            android:drawableLeft="@drawable/location"
+            android:padding="5dp"
+            android:text="At"
+            android:textColor="@color/colorBlue"
+            android:textSize="17sp"
+            android:textStyle="italic" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_meeting_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_meeting_at"
+            android:layout_centerInParent="true" />
+
+        <Button
+            android:id="@+id/dialog_chat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/rv_meeting_dialog"
+            android:layout_centerInParent="true"
+            android:text="CHAT" />
+    </RelativeLayout>
+</android.support.v7.widget.CardView>

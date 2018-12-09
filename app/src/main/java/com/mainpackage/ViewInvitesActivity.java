@@ -7,8 +7,10 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -25,8 +27,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.snapshot.StringNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import static android.view.View.GONE;
 
 public class ViewInvitesActivity extends AppCompatActivity {
     private ArrayList<Invite> inviteArrayList = new ArrayList<>();
@@ -34,11 +40,18 @@ public class ViewInvitesActivity extends AppCompatActivity {
     private ViewInvitesActivity.InvitesRecyclerAdapter invitesRecyclerAdapter;
     private ProgressDialog progressDialog;
     private final String TAG = "MYMSG";
+    private int position = -1;
+    ImageView no_data_imv_group_invite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_invites);
+        no_data_imv_group_invite = findViewById(R.id.no_data_my_group_invite);
+        Toolbar toolbar = findViewById(R.id.toolbar_view_invite);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         recycler_view_invites = findViewById(R.id.recycler_view_invites);
         progressDialog = new ProgressDialog(this);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -53,18 +66,19 @@ public class ViewInvitesActivity extends AppCompatActivity {
 
     }
 
-
     void loadInvites() {
+        progressDialog.setTitle("Loading");
+        progressDialog.setMessage("Please Wait!");
         progressDialog.show();
         DatabaseReference invitesReference = FirebaseDatabase.getInstance().getReference("users/" + GlobalApp.phone_number + "/invitations");
         invitesReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull final DataSnapshot dataSnapshot) {
                 inviteArrayList.clear();
-//                invitesRecyclerAdapter.notifyDataSetChanged();
+                invitesRecyclerAdapter.notifyDataSetChanged();
                 if (dataSnapshot.exists()) {
+                    no_data_imv_group_invite.setVisibility(GONE);
                     for (final DataSnapshot snapshot : dataSnapshot.getChildren()) {
-
                         final String group_code = (String) snapshot.getValue();
                         Log.d(TAG, group_code + " load invites");
                         DatabaseReference groupsReference = FirebaseDatabase.getInstance().getReference("groups").child(group_code);
@@ -76,8 +90,8 @@ public class ViewInvitesActivity extends AppCompatActivity {
 
                                 FirebaseDatabase.getInstance().getReference("users/" + owner_phone).addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
-                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        User owner_details = (User) dataSnapshot.getValue(User.class);
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot1) {
+                                        User owner_details = (User) dataSnapshot1.getValue(User.class);
                                         Invite invite = new Invite();
                                         invite.group_code = group_code;
                                         invite.group_name = group.getGroupName();
@@ -85,6 +99,9 @@ public class ViewInvitesActivity extends AppCompatActivity {
                                         invite.group_owner_photo = owner_details.getPhoto();
                                         invite.group_owner_phone = owner_details.getPhone();
                                         inviteArrayList.add(invite);
+                                        if (dataSnapshot.getChildrenCount() == inviteArrayList.size()) {
+                                            progressDialog.dismiss();
+                                        }
                                         invitesRecyclerAdapter.notifyDataSetChanged();
                                     }
 
@@ -101,13 +118,11 @@ public class ViewInvitesActivity extends AppCompatActivity {
 
                             }
                         });
-
-
                     }
-
+                } else {
+                    no_data_imv_group_invite.setVisibility(View.VISIBLE);
+                    progressDialog.dismiss();
                 }
-                progressDialog.dismiss();
-
 
             }
 
@@ -170,12 +185,14 @@ public class ViewInvitesActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     acceptInvite(invite);
+                    ViewInvitesActivity.this.position = position;
                 }
             });
             bt_reject_invite.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     rejectInvite(invite);
+                    ViewInvitesActivity.this.position = position;
                 }
             });
 
@@ -189,154 +206,85 @@ public class ViewInvitesActivity extends AppCompatActivity {
     }
 
     void acceptInvite(final Invite invite) {
+        progressDialog.show();
 
-        final DatabaseReference mainRef = FirebaseDatabase.getInstance()
+        FirebaseDatabase.getInstance()
                 .getReference("users")
                 .child(GlobalApp.phone_number)
-                .child("invitations");
-        mainRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshotInvitations) {
-
-                ArrayList<String> al_invitations = (ArrayList<String>) dataSnapshotInvitations.getValue();
-                Log.d(TAG, "Size" + al_invitations.size() + "");
-                int index = -1;
-                for (int i = 0; i < al_invitations.size(); i++) {
-                    Log.d(TAG, al_invitations.get(i) + "  :   " + invite.group_code);
-                    if (al_invitations.get(i).equals(invite.group_code)) {
-                        Log.d(TAG, "Equal");
-                        index = i;
-                        break;
-                    }
-                }
-                al_invitations.remove(index);
-
-
-                Log.d("MYMSG",al_invitations.size()+"   0000 "+GlobalApp.phone_number);
-                FirebaseDatabase.getInstance().getReference("users").child(GlobalApp.phone_number).child("invitations").setValue(al_invitations).addOnCompleteListener(new OnCompleteListener<Void>() {
+                .child("invitations")
+                .orderByValue()
+                .equalTo(invite.getGroup_code())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if(task.isComplete()){
-                            addToGroup(invite);
-                        }
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshotInvitations) {
+
+                        HashMap<String, String> hm = (HashMap<String, String>) dataSnapshotInvitations.getValue();
+                        dataSnapshotInvitations.child(hm.keySet().iterator().next()).getRef().removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    addToGroup(invite);
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Toast.makeText(ViewInvitesActivity.this, "UnKNOWN ERROR OCCURRED", Toast.LENGTH_SHORT).show();
                     }
                 });
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(ViewInvitesActivity.this, "UnKNOWN ERROR OCCURRED", Toast.LENGTH_SHORT).show();
-            }
-        });
 
     }
 
     void addToGroup(final Invite invite) {
-        final DatabaseReference user_ref = FirebaseDatabase.
-                getInstance()
+        FirebaseDatabase
+                .getInstance()
                 .getReference("users")
-                .child(GlobalApp.phone_number);
+                .child(GlobalApp.phone_number)
+                .child("groups").push().setValue(invite.getGroup_code());
 
-        user_ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                final User curr_user = dataSnapshot.getValue(User.class);
-                ArrayList<String> groupCodes = new ArrayList<>();
-                if (curr_user.groupcodes != null) {
-                    groupCodes = curr_user.groupcodes;
-                }
-                groupCodes.add(invite.group_code);
+        FirebaseDatabase
+                .getInstance()
+                .getReference("groups")
+                .child(invite.getGroup_code())
+                .child("members").push().setValue(GlobalApp.phone_number);
 
-                curr_user.groupcodes = groupCodes;
 
-                ArrayList<String> groupNames = new ArrayList<>();
-                if (curr_user.groupnames != null) {
-                    groupNames = curr_user.groupnames;
-                }
-                groupNames.add(invite.group_name);
-
-                curr_user.groupnames = groupNames;
-
-                dataSnapshot.getRef().setValue(curr_user).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if(task.isComplete()){
-
-                            FirebaseDatabase.getInstance().getReference("groups/"+invite.group_code+"/members").addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshotMembers) {
-                                    ArrayList<String> members=new ArrayList<>();
-                                    if(dataSnapshotMembers.getValue()!=null){
-                                        members=(ArrayList<String>)dataSnapshotMembers.getValue();
-                                    }
-                                    members.add(GlobalApp.phone_number);
-                                    dataSnapshotMembers.getRef().setValue(members).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            Toast.makeText(ViewInvitesActivity.this, "INVITE ACCEPTED", Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                                    
-
-                                }
-
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-                                    Toast.makeText(ViewInvitesActivity.this, "Task couldnt be completed", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }else{
-                            Toast.makeText(ViewInvitesActivity.this, "Task Couldnt be completed", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(ViewInvitesActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     void rejectInvite(final Invite invite) {
-        final DatabaseReference mainRef = FirebaseDatabase.getInstance()
+        progressDialog.show();
+        FirebaseDatabase.getInstance()
                 .getReference("users")
                 .child(GlobalApp.phone_number)
-                .child("invitations");
-        mainRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshotInvitations) {
-
-                ArrayList<String> al_invitations = (ArrayList<String>) dataSnapshotInvitations.getValue();
-
-                if (al_invitations == null) {
-                    al_invitations = new ArrayList<>();
-                }
-
-                int index = -1;
-                for (int i = 0; i < al_invitations.size(); i++) {
-                    if (al_invitations.get(i).equals(invite.group_code)) {
-                        index = i;
-                        break;
-                    }
-                }
-                al_invitations.remove(index);
-                Log.d(TAG, "onDataChange: " + al_invitations.size());
-                dataSnapshotInvitations.getRef().setValue(al_invitations).addOnCompleteListener(new OnCompleteListener<Void>() {
+                .child("invitations").orderByValue().equalTo(invite.getGroup_code())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(ViewInvitesActivity.this, "REJECTED", Toast.LENGTH_SHORT).show();
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshotInvitations) {
+                        dataSnapshotInvitations.getRef().removeValue();
+                        inviteArrayList.remove(position);
+                        invitesRecyclerAdapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Toast.makeText(ViewInvitesActivity.this, "UNKNOWN ERROR OCCURRED", Toast.LENGTH_SHORT).show();
                     }
                 });
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(ViewInvitesActivity.this, "UnKNOWN ERROR OCCURRED", Toast.LENGTH_SHORT).show();
-            }
-        });
 
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case android.R.id.home:
+                this.finish();
+                return true;
+        }
+        return false;
+    }
+
 
 }
